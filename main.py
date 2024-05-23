@@ -60,11 +60,11 @@ class Pagenation_System_View(discord.ui.View):
         name = self.r[self.p - 1]["name"]
         url = self.r[self.p - 1]["svn_url"]
         created_at = str(self.r[self.p - 1]["created_at"]).split("T")[0]
-        size = self.r[self.p - 1]["size"]
+        size = self.r[self.p - 1]["size"] / 1000
         language = self.r[self.p - 1]["language"]
 
 
-        embed.description = f"Name : {name}\nRepo Url : {url}\nCreated At : {created_at}\nSize : {size}\nLanguage : {language}"
+        embed.description = f"Name : {name}\nRepo Url : {url}\nCreated At : {created_at}\nSize : {size}MB\nLanguage : {language}"
         embed.set_footer(text=f"Page : {self.p} / {len(self.r)}")
 
         await interaction.message.edit(embed=embed)
@@ -108,11 +108,11 @@ class Pagenation_System_View(discord.ui.View):
         name = self.r[self.p - 1]["name"]
         url = self.r[self.p - 1]["svn_url"]
         created_at = str(self.r[self.p - 1]["created_at"]).split("T")[0]
-        size = self.r[self.p - 1]["size"]
+        size = self.r[self.p - 1]["size"] / 1000
         language = self.r[self.p - 1]["language"]
 
 
-        embed.description = f"Name : {name}\nRepo Url : {url}\nCreated At : {created_at}\nSize : {size}\nLanguage : {language}"
+        embed.description = f"Name : {name}\nRepo Url : {url}\nCreated At : {created_at}\nSize : {size}MB\nLanguage : {language}"
         embed.set_footer(text=f"Page : {self.p} / {len(self.r)}")
 
         await interaction.message.edit(embed=embed)
