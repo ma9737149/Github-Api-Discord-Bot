@@ -62,9 +62,10 @@ class Pagenation_System_View(discord.ui.View):
         created_at = str(self.r[self.p - 1]["created_at"]).split("T")[0]
         size = self.r[self.p - 1]["size"] / 1000
         language = self.r[self.p - 1]["language"]
+        stars = self.r[self.p - 1]["stargazers_count"]
 
 
-        embed.description = f"Name : {name}\nRepo Url : {url}\nCreated At : {created_at}\nSize : {size}MB\nLanguage : {language}"
+        embed.description = f"Name : {name}\nRepo Url : {url}\nCreated At : {created_at}\nSize : {size}MB\nLanguage : {language}\nStars : {stars}"
         embed.set_footer(text=f"Page : {self.p} / {len(self.r)}")
 
         await interaction.message.edit(embed=embed)
@@ -110,9 +111,10 @@ class Pagenation_System_View(discord.ui.View):
         created_at = str(self.r[self.p - 1]["created_at"]).split("T")[0]
         size = self.r[self.p - 1]["size"] / 1000
         language = self.r[self.p - 1]["language"]
+        stars = self.r[self.p - 1]["stargazers_count"]
 
 
-        embed.description = f"Name : {name}\nRepo Url : {url}\nCreated At : {created_at}\nSize : {size}MB\nLanguage : {language}"
+        embed.description = f"Name : {name}\nRepo Url : {url}\nCreated At : {created_at}\nSize : {size}MB\nLanguage : {language}\nStars : {stars}"
         embed.set_footer(text=f"Page : {self.p} / {len(self.r)}")
 
         await interaction.message.edit(embed=embed)
