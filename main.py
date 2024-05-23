@@ -21,6 +21,30 @@ class Pagenation_System_View(discord.ui.View):
         self.n = user_name
         self.id = user_id
 
+    async def return_to_first_page_func(self,interaction:discord.Interaction,embed:discord.Embed):
+        user_repos_json_data = requests.get(f"https://api.github.com/users/{self.n}/repos").json()
+        link = requests.get(f"https://api.github.com/users/{self.n}")
+        json_link = link.json()
+        bio = "Therse Is No Bio" if json_link["bio"] == None else json_link["bio"]
+        user_id = json_link["id"]
+        avatar_url = json_link["avatar_url"]
+        followers = json_link["followers"]
+        following = json_link["following"]
+        public_repos = json_link["public_repos"]
+        name = json_link["name"] if json_link["name"] != None else "There Is No Name"
+        joined_at = str(json_link["created_at"]).split("T")[0]
+        updated_at = str(json_link["updated_at"]).split("T")[0]
+        embed.title = f"{name} Github Info"
+        embed.description = f"> User Bio : {bio}\n> User Id : {user_id}\n> Followers : {followers}\n> Following : {following}\n> Public Repos : {public_repos}\n> Name : {name}\n> Joined at : {joined_at}\n> Updated At : {updated_at}"
+        embed.set_thumbnail(url=avatar_url)
+        embed.set_footer(
+            text=f"Requested By : {interaction.user.display_name} - Page : 0 / {len(user_repos_json_data)}", icon_url=interaction.user.display_avatar.url)
+        await interaction.message.edit(embed=embed)
+            
+        return
+
+
+
     @discord.ui.button(label="<-",style=discord.ButtonStyle.blurple)
     async def _back(self,interaction:discord.Interaction,button:discord.ui.Button):
         if interaction.user.id != self.id:
@@ -35,27 +59,7 @@ class Pagenation_System_View(discord.ui.View):
             self.p = len(self.r)
 
         if self.p == 0:
-            user_repos_json_data = requests.get(f"https://api.github.com/users/{self.n}/repos").json()
-            link = requests.get(f"https://api.github.com/users/{self.n}")
-            json_link = link.json()
-            bio = "Therse Is No Bio" if json_link["bio"] == None else json_link["bio"]
-            user_id = json_link["id"]
-            avatar_url = json_link["avatar_url"]
-            followers = json_link["followers"]
-            following = json_link["following"]
-            public_repos = json_link["public_repos"]
-            name = json_link["name"] if json_link["name"] != None else "There Is No Name"
-            joined_at = str(json_link["created_at"]).split("T")[0]
-            updated_at = str(json_link["updated_at"]).split("T")[0]
-            embed.title = f"{name} Github Info"
-            embed.description = f"> User Bio : {bio}\n> User Id : {user_id}\n> Followers : {followers}\n> Following : {following}\n> Public Repos : {public_repos}\n> Name : {name}\n> Joined at : {joined_at}\n> Updated At : {updated_at}"
-            embed.set_thumbnail(url=avatar_url)
-            embed.set_footer(
-                text=f"Requested By : {interaction.user.display_name} - Page : 0 / {len(user_repos_json_data)}", icon_url=interaction.user.display_avatar.url)
-
-            await interaction.message.edit(embed=embed)
-            
-            return
+            await self.return_to_first_page_func(interaction,embed)
 
         name = self.r[self.p - 1]["name"]
         url = self.r[self.p - 1]["svn_url"]
@@ -83,27 +87,8 @@ class Pagenation_System_View(discord.ui.View):
             self.p = 0
 
         if self.p == 0:
-            user_repos_json_data = requests.get(f"https://api.github.com/users/{self.n}/repos").json()
-            link = requests.get(f"https://api.github.com/users/{self.n}")
-            json_link = link.json()
-            bio = "Therse Is No Bio" if json_link["bio"] == None else json_link["bio"]
-            user_id = json_link["id"]
-            avatar_url = json_link["avatar_url"]
-            followers = json_link["followers"]
-            following = json_link["following"]
-            public_repos = json_link["public_repos"]
-            name = json_link["name"] if json_link["name"] != None else "There Is No Name"
-            joined_at = str(json_link["created_at"]).split("T")[0]
-            updated_at = str(json_link["updated_at"]).split("T")[0]
-            embed.title = f"{name} Github Info"
-            embed.description = f"> User Bio : {bio}\n> User Id : {user_id}\n> Followers : {followers}\n> Following : {following}\n> Public Repos : {public_repos}\n> Name : {name}\n> Joined at : {joined_at}\n> Updated At : {updated_at}"
-            embed.set_thumbnail(url=avatar_url)
-            embed.set_footer(
-                text=f"Requested By : {interaction.user.display_name} - Page : 0 / {len(user_repos_json_data)}", icon_url=interaction.user.display_avatar.url)
+            await self.return_to_first_page_func(interaction,embed)
 
-            await interaction.message.edit(embed=embed)
-            
-            return
 
 
         name = self.r[self.p - 1]["name"]
@@ -156,4 +141,4 @@ async def _github_info(interaction: discord.Interaction, user_name: str) -> None
 
 
 client.run(
-    "Token Goes Here")
+    "Token")
