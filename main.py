@@ -23,7 +23,7 @@ class Pagenation_System_View(discord.ui.View):
 
     def calc_perecentege(self,dictionary:dict) -> list:
         values_sum = sum(list(dictionary.values()))
-        languages = [key for key,val in  dictionary.items()]
+        languages = [key for key,val in dictionary.items()]
         
         values_with_precentege = []
         
@@ -35,7 +35,7 @@ class Pagenation_System_View(discord.ui.View):
 
 
 
-    async def return_to_first_page_func(self,interaction:discord.Interaction,embed:discord.Embed):
+    async def return_to_first_page_func(self,interaction:discord.Interaction,embed:discord.Embed) -> None:
         user_repos_json_data = requests.get(f"https://api.github.com/users/{self.n}/repos").json()
         link = requests.get(f"https://api.github.com/users/{self.n}")
         json_link = link.json()
@@ -53,9 +53,9 @@ class Pagenation_System_View(discord.ui.View):
         embed.set_thumbnail(url=avatar_url)
         embed.set_footer(
             text=f"Requested By : {interaction.user.display_name}", icon_url=interaction.user.display_avatar.url)
+
         await interaction.message.edit(embed=embed)
-            
-        return
+
 
 
 
@@ -72,8 +72,10 @@ class Pagenation_System_View(discord.ui.View):
         if self.p < 0:
             self.p = len(self.r)
 
-        if self.p == 0:
+        elif self.p == 0:
             await self.return_to_first_page_func(interaction,embed)
+            return
+
 
         name = self.r[self.p - 1]["name"]
         url = self.r[self.p - 1]["svn_url"]
@@ -104,6 +106,7 @@ class Pagenation_System_View(discord.ui.View):
 
         if self.p == 0:
             await self.return_to_first_page_func(interaction,embed)
+            return
 
 
 
