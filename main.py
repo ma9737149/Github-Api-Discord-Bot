@@ -21,6 +21,20 @@ class Pagenation_System_View(discord.ui.View):
         self.n = user_name
         self.id = user_id
 
+    def calc_perecentege(self,dictionary:dict) -> str:
+        values_sum = sum(list(dictionary.values()))
+        languages = [key for key,val in  dictionary.items()]
+        
+        values_with_precentege = []
+        
+        for i in range(len(languages)):
+            values_with_precentege.append(f"{languages[i]} : {int((dictionary[languages[i]]/values_sum)*100)}%")
+            
+        return values_with_precentege
+
+
+
+
     async def return_to_first_page_func(self,interaction:discord.Interaction,embed:discord.Embed):
         user_repos_json_data = requests.get(f"https://api.github.com/users/{self.n}/repos").json()
         link = requests.get(f"https://api.github.com/users/{self.n}")
@@ -38,7 +52,7 @@ class Pagenation_System_View(discord.ui.View):
         embed.description = f"> User Bio : {bio}\n> User Id : {user_id}\n> Followers : {followers}\n> Following : {following}\n> Public Repos : {public_repos}\n> Name : {name}\n> Joined at : {joined_at}\n> Updated At : {updated_at}"
         embed.set_thumbnail(url=avatar_url)
         embed.set_footer(
-            text=f"Requested By : {interaction.user.display_name} - Page : 0 / {len(user_repos_json_data)}", icon_url=interaction.user.display_avatar.url)
+            text=f"Requested By : {interaction.user.display_name}", icon_url=interaction.user.display_avatar.url)
         await interaction.message.edit(embed=embed)
             
         return
@@ -68,8 +82,10 @@ class Pagenation_System_View(discord.ui.View):
         language = self.r[self.p - 1]["language"]
         stars = self.r[self.p - 1]["stargazers_count"]
 
+        my_data = self.calc_perecentege(requests.get(f"https://api.github.com/repos/{self.n}/{name}/languages").json())
 
-        embed.description = f"Name : {name}\nRepo Url : {url}\nCreated At : {created_at}\nSize : {size}MB\nLanguage : {language}\nStars : {stars}"
+
+        embed.description = f"Name : {name}\nRepo Url : {url}\nCreated At : {created_at}\nSize : {size}MB\nLanguage : {language}\nStars : {stars}\n" + "\n".join(my_data)
         embed.set_footer(text=f"Page : {self.p} / {len(self.r)}")
 
         await interaction.message.edit(embed=embed)
@@ -97,9 +113,10 @@ class Pagenation_System_View(discord.ui.View):
         size = self.r[self.p - 1]["size"] / 1000
         language = self.r[self.p - 1]["language"]
         stars = self.r[self.p - 1]["stargazers_count"]
+        my_data = self.calc_perecentege(requests.get(f"https://api.github.com/repos/{self.n}/{name}/languages").json())
 
 
-        embed.description = f"Name : {name}\nRepo Url : {url}\nCreated At : {created_at}\nSize : {size}MB\nLanguage : {language}\nStars : {stars}"
+        embed.description = f"Name : {name}\nRepo Url : {url}\nCreated At : {created_at}\nSize : {size}MB\nLanguage : {language}\nStars : {stars}\n" + "\n".join(my_data)
         embed.set_footer(text=f"Page : {self.p} / {len(self.r)}")
 
         await interaction.message.edit(embed=embed)
@@ -131,7 +148,7 @@ async def _github_info(interaction: discord.Interaction, user_name: str) -> None
         embed = discord.Embed(title=f"{user_name} Github Info", description=f"> User Bio : {bio}\n> User Id : {user_id}\n> Followers : {followers}\n> Following : {following}\n> Public Repos : {public_repos}\n> Name : {name}\n> Joined at : {joined_at}\n> Updated At : {updated_at}", color=discord.Colour.dark_gold())
         embed.set_thumbnail(url=avatar_url)
         embed.set_footer(
-            text=f"Requested By : {interaction.user.display_name} - Page : {page} / {len(user_repos_json_data)}", icon_url=interaction.user.display_avatar.url)
+            text=f"Requested By : {interaction.user.display_name}", icon_url=interaction.user.display_avatar.url)
         await interaction.response.send_message(embed=embed,view=Pagenation_System_View(page,user_name,user_repos_json_data,interaction.user.id))
 
 
@@ -141,4 +158,4 @@ async def _github_info(interaction: discord.Interaction, user_name: str) -> None
 
 
 client.run(
-    "Token")
+    "TOKEN")
