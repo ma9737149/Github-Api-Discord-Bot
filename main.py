@@ -21,7 +21,7 @@ class Pagenation_System_View(discord.ui.View):
         self.n = user_name
         self.id = user_id
 
-    def calc_perecentege(self,dictionary:dict) -> str:
+    def calc_perecentege(self,dictionary:dict) -> list:
         values_sum = sum(list(dictionary.values()))
         languages = [key for key,val in  dictionary.items()]
         
