@@ -5,7 +5,6 @@ from discord import app_commands
 import os
 from dotenv import load_dotenv
 from view.github_view import Pagenation_System_View
-from discord.ext import tasks
 
 
 client = commands.Bot(command_prefix="!", intents=discord.Intents.all())
@@ -18,7 +17,8 @@ async def on_ready():
     synced = await tree.sync()
     print(f"Bot Logged As {client.user}\nSynced {len(synced)} guild command(s)")
 
-
+class APIRateLimitError(Exception):
+    pass
 
 
 @tree.command(name="github_user_info", description="get github user info by his name")
@@ -29,6 +29,10 @@ async def _github_info(interaction: discord.Interaction, user_name: str) -> None
         user_repos_json_data = requests.get(f"https://api.github.com/users/{user_name}/repos").json()
         link = requests.get(f"https://api.github.com/users/{user_name}")
         json_link = link.json()
+
+        if not json_link.get("message", None) is None and "API rate limit" in json_link.get("message"):
+            raise APIRateLimitError("API rate limit exceeded. Please try again later.")
+
 
         bio = json_link.get("bio" , "Therse Is No Bio")
         user_id = json_link["id"]
@@ -47,16 +51,20 @@ async def _github_info(interaction: discord.Interaction, user_name: str) -> None
         embed.set_footer(
             text=f"Requested By : {interaction.user.display_name}", icon_url=interaction.user.display_avatar.url
         )
-        await interaction.response.send_message(embed=embed,view=Pagenation_System_View(page,user_name,user_repos_json_data,interaction.user.id))
+        
+        view = Pagenation_System_View(page,user_name,user_repos_json_data,interaction.user.id) if int(public_repos) != 0 else None
+        await interaction.response.send_message(embed=embed,view=view)
 
 
 
-    except Exception as e:
-        await interaction.response.send_message(f"Failled To Get This User Info", ephemeral=True)
+    except APIRateLimitError as error:
+        await interaction.response.send_message(error, ephemeral=True)
 
+    except KeyError as error:
+        await interaction.response.send_message("user not found" , ephemeral=True)
 
-
-
+    except :
+        return
 
 
 client.run(os.getenv("TOKEN"))
