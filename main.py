@@ -1,16 +1,26 @@
 import discord
-import requests
+import aiohttp
+import asyncio
 from discord.ext import commands
 from discord import app_commands
 import os
 from dotenv import load_dotenv
 from view.github_view import Pagenation_System_View
 
+class Bot(commands.Bot):
+    async def setup_hook(self) -> None:
+        self.session = aiohttp.ClientSession()
 
-client = commands.Bot(command_prefix="!", intents=discord.Intents.all())
+    async def close(self) -> None:
+        await self.session.close()
+        await super().close()
+
+client = Bot(command_prefix="!", intents=discord.Intents.all())
+
 tree = client.tree
 
 load_dotenv()
+
 
 @client.event
 async def on_ready():
@@ -21,38 +31,46 @@ class APIRateLimitError(Exception):
     pass
 
 
+async def fetch_data(session :  aiohttp.ClientSession ,url : str):
+    async with session.get(url) as response:
+        return await response.json()
+
 @tree.command(name="github_user_info", description="get github user info by his name")
 @app_commands.describe(user_name="who is the user who you want to know its info")
 async def _github_info(interaction: discord.Interaction, user_name: str) -> None:
     try:
         page = 0
-        user_repos_json_data = requests.get(f"https://api.github.com/users/{user_name}/repos").json()
-        link = requests.get(f"https://api.github.com/users/{user_name}")
-        json_link = link.json()
 
-        if not json_link.get("message", None) is None and "API rate limit" in json_link.get("message"):
+        url1 = f"https://api.github.com/users/{user_name}/repos"
+        url2 = f"https://api.github.com/users/{user_name}"
+
+        user_repos_json_data , get_user_data = await asyncio.gather(fetch_data(interaction.client.session , url1),
+                                                                    fetch_data(interaction.client.session , url2))
+
+
+        if not get_user_data.get("message", None) is None and "API rate limit" in get_user_data.get("message"):
             raise APIRateLimitError("API rate limit exceeded. Please try again later.")
 
 
-        bio = json_link.get("bio" , "Therse Is No Bio")
-        user_id = json_link["id"]
-        avatar_url = json_link["avatar_url"]
+        bio = get_user_data.get("bio" , "Therse Is No Bio")
+        user_id = get_user_data["id"]
+        avatar_url = get_user_data["avatar_url"]
 
-        followers = json_link["followers"]
-        following = json_link["following"]
+        followers = get_user_data["followers"]
+        following = get_user_data["following"]
 
-        public_repos = json_link["public_repos"]
-        name = json_link.get("name" , "There Is No Name")
-        joined_at = str(json_link["created_at"]).split("T")[0]
-        updated_at = str(json_link["updated_at"]).split("T")[0]
+        public_repos = get_user_data["public_repos"]
+        name = get_user_data.get("name" , "There Is No Name")
+        joined_at = str(get_user_data["created_at"]).split("T")[0]
+        updated_at = str(get_user_data["updated_at"]).split("T")[0]
 
         embed = discord.Embed(title=f"{user_name} Github Info", description=f"> User Bio : {bio}\n> User Id : {user_id}\n> Followers : {followers}\n> Following : {following}\n> Public Repos : {public_repos}\n> Name : {name}\n> Joined at : {joined_at}\n> Updated At : {updated_at}", color=discord.Colour.dark_gold())
         embed.set_thumbnail(url=avatar_url)
         embed.set_footer(
             text=f"Requested By : {interaction.user.display_name}", icon_url=interaction.user.display_avatar.url
         )
-        
-        view = Pagenation_System_View(page,user_name,user_repos_json_data,interaction.user.id) if int(public_repos) != 0 else None
+
+        view = Pagenation_System_View(page,user_name,user_repos_json_data,interaction.user.id , interaction.client.session) if int(public_repos) != 0 else None
         await interaction.response.send_message(embed=embed,view=view)
 
 
@@ -63,7 +81,8 @@ async def _github_info(interaction: discord.Interaction, user_name: str) -> None
     except KeyError as error:
         await interaction.response.send_message("user not found" , ephemeral=True)
 
-    except :
+    except Exception as e:
+        print(e)
         return
 
 

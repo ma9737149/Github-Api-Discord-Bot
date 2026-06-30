@@ -1,13 +1,21 @@
 import discord
-import requests
+import aiohttp
 
 class Pagenation_System_View(discord.ui.View):
-    def __init__(self,page:int,user_name,user_repos_json_data:dict,user_id):
+    def __init__(self,page:int,user_name,user_repos_json_data:dict,user_id , session : aiohttp.ClientSession):
         super().__init__(timeout=None)
         self.page = page
         self.repos = user_repos_json_data
         self.name = user_name
         self.id = user_id
+        self.session = session
+
+    async def fetch_data(self , session :  aiohttp.ClientSession ,url : str):
+        async with session.get(url) as response:
+            return await response.json()
+
+    async def on_timeout(self) -> None:
+        await self.session.close()
 
     def calc_perecentege(self,dictionary:dict) -> list:
         values_sum = sum(list(dictionary.values()))
@@ -24,28 +32,27 @@ class Pagenation_System_View(discord.ui.View):
 
 
     async def return_to_first_page_func(self,interaction:discord.Interaction,embed:discord.Embed) -> None:
-        user_repos_json_data = requests.get(f"https://api.github.com/users/{self.name}/repos").json()
-        link = requests.get(f"https://api.github.com/users/{self.name}")
-        json_link = link.json()
+         url = f"https://api.github.com/users/{self.name}"
+         repo_data = await self.fetch_data(self.session , url)
 
-        bio = json_link.get("bio" , "Therse Is No Bio")
-        user_id = json_link["id"]
-        avatar_url = json_link["avatar_url"]
+         bio = repo_data.get("bio" , "Therse Is No Bio")
+         user_id = repo_data["id"]
+         avatar_url = repo_data["avatar_url"]
 
-        followers = json_link["followers"]
-        following = json_link["following"]
-        public_repos = json_link["public_repos"]
-        name = json_link.get("name" , "There Is No Name")
-        joined_at = str(json_link["created_at"]).split("T")[0]
-        updated_at = str(json_link["updated_at"]).split("T")[0]
+         followers = repo_data["followers"]
+         following = repo_data["following"]
+         public_repos = repo_data["public_repos"]
+         name = repo_data.get("name" , "There Is No Name")
+         joined_at = str(repo_data["created_at"]).split("T")[0]
+         updated_at = str(repo_data["updated_at"]).split("T")[0]
 
-        embed.title = f"{name} Github Info"
-        embed.description = f"> User Bio : {bio}\n> User Id : {user_id}\n> Followers : {followers}\n> Following : {following}\n> Public Repos : {public_repos}\n> Name : {name}\n> Joined at : {joined_at}\n> Updated At : {updated_at}"
-        embed.set_thumbnail(url=avatar_url)
-        embed.set_footer(
-            text=f"Requested By : {interaction.user.display_name}", icon_url=interaction.user.display_avatar.url)
+         embed.title = f"{name} Github Info"
+         embed.description = f"> User Bio : {bio}\n> User Id : {user_id}\n> Followers : {followers}\n> Following : {following}\n> Public Repos : {public_repos}\n> Name : {name}\n> Joined at : {joined_at}\n> Updated At : {updated_at}"
+         embed.set_thumbnail(url=avatar_url)
+         embed.set_footer(
+              text=f"Requested By : {interaction.user.display_name}", icon_url=interaction.user.display_avatar.url)
 
-        await interaction.message.edit(embed=embed)
+         await interaction.message.edit(embed=embed)
 
 
 
@@ -75,7 +82,11 @@ class Pagenation_System_View(discord.ui.View):
         language = self.repos[self.page - 1]["language"]
         stars = self.repos[self.page - 1]["stargazers_count"]
 
-        my_data = self.calc_perecentege(requests.get(f"https://api.github.com/repos/{self.name}/{name}/languages").json())
+        url = f"https://api.github.com/repos/{self.name}/{name}/languages"
+        languages = await self.fetch_data(self.session , url)
+
+        my_data = self.calc_perecentege(languages)
+        
 
 
         embed.description = f"Name : {name}\nRepo Url : {url}\nCreated At : {created_at}\nSize : {size}MB\nLanguage : {language}\nStars : {stars}\n" + "\n".join(my_data)
@@ -108,7 +119,12 @@ class Pagenation_System_View(discord.ui.View):
         size = self.repos[self.page - 1]["size"] / 1000
         language = self.repos[self.page - 1]["language"]
         stars = self.repos[self.page - 1]["stargazers_count"]
-        my_data = self.calc_perecentege(requests.get(f"https://api.github.com/repos/{self.name}/{name}/languages").json())
+
+        url = f"https://api.github.com/repos/{self.name}/{name}/languages"
+        languages = await self.fetch_data(self.session , url)
+
+        my_data = self.calc_perecentege(languages)
+        
 
 
         embed.description = f"Name : {name}\nRepo Url : {url}\nCreated At : {created_at}\nSize : {size}MB\nLanguage : {language}\nStars : {stars}\n" + "\n".join(my_data)
