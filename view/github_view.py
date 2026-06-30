@@ -14,9 +14,6 @@ class Pagenation_System_View(discord.ui.View):
         async with session.get(url) as response:
             return await response.json()
 
-    async def on_timeout(self) -> None:
-        await self.session.close()
-
     def calc_perecentege(self,dictionary:dict) -> list:
         values_sum = sum(list(dictionary.values()))
         languages = [key for key,val in dictionary.items()]
